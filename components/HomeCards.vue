@@ -1,6 +1,6 @@
 <template>
   <div class="cards">
-    <img :src="home.images[0]" /><br />
+    <img :src="home.images[0]" width="200" /><br />
     <div class="description">
       {{ home.title }} <br />
       {{ home.location.address }} {{ home.location.city }}
@@ -23,11 +23,11 @@ export default {
 </script>
 
 <style>
-img {
+/* img {
   width: 200px;
   margin: 10px;
 }
 .description {
   margin: 10px;
-}
+} */
 </style>

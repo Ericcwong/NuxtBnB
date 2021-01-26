@@ -28,25 +28,6 @@ export default {
   head() {
     return {
       title: this.home.title,
-      // Note: Putting the script in the head tag allows the DOM to load first and then execute the script function
-      // ----> in this case, it is loading the Google places API
-      // Note: hid and defer are required from Google for the API to work
-      // Note: Within the script src: there is a callback function. Callback function makes it so the browser only
-      // ----> reads the script once. If it is read multiple times, the browser will return an error.
-      // Note: Now that initMap is called set the mapLoaded to true. When mapLoaded and the client are matched as true. Skip loading the script
-      script: [
-        {
-          src:
-            "https://maps.googleapis.com/maps/api/js?key=AIzaSyDktFtQpoBrueyMxtQphlntzRA1iegjGzc&libraries=places&callback=initMap",
-          hid: "map",
-          defer: true,
-          skip: process.client && window.mapLoaded,
-        },
-        {
-          innerHTML: "window.initMap =  function(){ window.mapLoaded = true }",
-          hid: "map-init",
-        },
-      ],
     };
   },
   data() {
@@ -64,28 +45,15 @@ export default {
     const home = homes.find((home) => home.objectID == this.$route.params.id);
     this.home = home;
   },
+  //Note: When mounted, it will call upon the plugin maps.client.js. (That is made global within nuxt.config.js);
+  //----> this.$refs.map is referencing the ref="map" in the DOM. This is how it knows where to mount
+  //----> this.home._geoloc.lat and this.home._geoloc.lng is calling from the data home's inputed object.
   mounted() {
-    //Note: This mapOption zoom is set to 18 and 20 is the farthest zoom back
-    //----> center is calling the data from the json file. Saving it to mapOptions
-    //Note: Map is not declared but is still used via ref="map" in the template section.
-    //----> Map also displays the map into the DOM
-    //Note: setMap() function adds the red marker to the map.
-    const mapOptions = {
-      zoom: 18,
-      center: new window.google.maps.LatLng(
-        this.home._geoloc.lat,
-        this.home._geoloc.lng
-      ),
-      disableDefaultUI: true,
-      zoomControl: true,
-    };
-    const map = new window.google.maps.Map(this.$refs.map, mapOptions);
-    const position = new window.google.maps.LatLng(
+    this.$maps.showMap(
+      this.$refs.map,
       this.home._geoloc.lat,
       this.home._geoloc.lng
     );
-    const marker = new window.google.maps.Marker({ position });
-    marker.setMap(map);
   },
 };
 </script>
@@ -93,9 +61,5 @@ export default {
 <style>
 .images {
   display: flex;
-}
-img {
-  /* width: 200px;
-  height: 150px; */
 }
 </style>

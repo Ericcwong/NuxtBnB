@@ -19,7 +19,8 @@ export default {
 
   // Plugins to run before rendering page (https://go.nuxtjs.dev/config-plugins)
   plugins: [
-    "~/plugins/maps.client"
+    "~/plugins/maps.client",
+    "~/plugins/dataApi",
   ],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)

@@ -23,31 +23,30 @@
 </template>
 
 <script>
-import homes from "~/data/homes";
 export default {
   head() {
     return {
       title: this.home.title,
     };
   },
-  data() {
+  async asyncData({ params, $dataApi, error }) {
+    /*Notes: async asyncData() is an alternative to mounted. AsyncData() allows Nuxt to render
+     *server side first allowing data to be retrieve to populate the dom.
+     */
+    const response = await $dataApi.getHome(params.id);
+    if (!response.okay)
+      return error({
+        statusCode: response.status,
+        message: response.statusText,
+      });
     return {
-      home: {},
+      home: response.json,
     };
   },
-  created() {
-    //Note: Taking import homes and find as instructed.
-    //Note: home will be what home.object (Quick note: the home.objectID is inside the homes.json file) ---
-    //----> equals to the route parameters.
-    //Note: The tutorial explains that when you search up the url localhost:3000/home/a "Cozy Cabin in the Woods" would show up
-    //----> Now whatever the objectID is and you type it as a route parameter, it would redirect you to the desired home!
-    //Note: assigns the data home to the const home.
-    const home = homes.find((home) => home.objectID == this.$route.params.id);
-    this.home = home;
-  },
-  //Note: When mounted, it will call upon the plugin maps.client.js. (That is made global within nuxt.config.js);
-  //----> this.$refs.map is referencing the ref="map" in the DOM. This is how it knows where to mount
-  //----> this.home._geoloc.lat and this.home._geoloc.lng is calling from the data home's inputed object.
+  /*Note: When mounted, it will call upon the plugin maps.client.js. (That is made global within nuxt.config.js);
+   * this.$refs.map is referencing the ref="map" in the DOM. This is how it knows where to mount
+   * this.home._geoloc.lat and this.home._geoloc.lng is calling from the data home's inputed object.
+   */
   mounted() {
     this.$maps.showMap(
       this.$refs.map,

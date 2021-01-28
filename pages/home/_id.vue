@@ -21,6 +21,9 @@
     <div style="height: 800px; width: 800px" ref="map"></div>
     <div v-for="review in reviews" :key="review.objectID">
       <img :src="review.reviewer.image" alt="" /> <br />
+      {{ review.reviewer.name }} <br />
+      {{ formatDate(review.date) }} <br />
+      {{ review.comment }} <br />
     </div>
   </div>
 </template>
@@ -37,7 +40,6 @@ export default {
      *server side first allowing data to be retrieve to populate the dom.
      */
     const homeResponse = await $dataApi.getHome(params.id);
-    console.log(homeResponse);
     if (!homeResponse.ok)
       return error({
         statusCode: homeResponse.status,
@@ -65,6 +67,15 @@ export default {
       this.home._geoloc.lat,
       this.home._geoloc.lng
     );
+  },
+  methods: {
+    formatDate(dataStr) {
+      const date = new Date(dataStr);
+      return date.toLocaleDateString(undefined, {
+        month: "long",
+        year: "numeric",
+      });
+    },
   },
 };
 </script>

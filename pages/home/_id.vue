@@ -19,6 +19,9 @@
     {{ home.guests }} guests, {{ home.bedrooms }} rooms, {{ home.beds }} beds,
     {{ home.bathroom }} bath <br />
     <div style="height: 800px; width: 800px" ref="map"></div>
+    <div v-for="review in reviews" :key="review.objectID">
+      <img :src="review.reviewer.image" alt="" /> <br />
+    </div>
   </div>
 </template>
 
@@ -33,16 +36,25 @@ export default {
     /*Notes: async asyncData() is an alternative to mounted. AsyncData() allows Nuxt to render
      *server side first allowing data to be retrieve to populate the dom.
      */
-    const response = await $dataApi.getHome(params.id);
-    if (!response.okay)
+    const homeResponse = await $dataApi.getHome(params.id);
+    console.log(homeResponse);
+    if (!homeResponse.ok)
       return error({
-        statusCode: response.status,
-        message: response.statusText,
+        statusCode: homeResponse.status,
+        message: homeResponse.statusText,
+      });
+    const reviewResponse = await $dataApi.getReviewsByHomeId(params.id);
+    if (!reviewResponse.ok)
+      return error({
+        statusCode: reviewResponse.status,
+        message: reviewResponse.statusText,
       });
     return {
-      home: response.json,
+      home: homeResponse.json,
+      reviews: reviewResponse.json.hits,
     };
   },
+
   /*Note: When mounted, it will call upon the plugin maps.client.js. (That is made global within nuxt.config.js);
    * this.$refs.map is referencing the ref="map" in the DOM. This is how it knows where to mount
    * this.home._geoloc.lat and this.home._geoloc.lng is calling from the data home's inputed object.

@@ -5,11 +5,12 @@ export default function(context, inject){
    * maps is the name
    * showMap is what we are injecting
   */
-    let mapLoaded = false;
-    let mapWaiting = null
+    let isLoaded = false;
+    let waiting = [];
     addScript();
     inject("maps",{
-        showMap
+        showMap,
+        makeAutoComplete
     })
 
     function addScript(){
@@ -17,39 +18,47 @@ export default function(context, inject){
       /*Example: <script src="https://maps.googleapis.com/..." async>
       /*Notes: 
        * Google maps needs an still needs a way to tap into the the local variables that we have.
-       * window.initMap is google's API that is asigned to our local variables initMap! 
+       * window.initGoogleMaps is google's API that is asigned to our local variables initGoogleMaps! 
       */
         const script = document.createElement("script")
-        script.src =  "https://maps.googleapis.com/maps/api/js?key=AIzaSyDktFtQpoBrueyMxtQphlntzRA1iegjGzc&libraries=places&callback=initMap"
+        script.src =  "https://maps.googleapis.com/maps/api/js?key=AIzaSyDktFtQpoBrueyMxtQphlntzRA1iegjGzc&libraries=places&callback=initGoogleMaps"
         script.async = true
-        window.initMap = initMap
+        window.initGoogleMaps = initGoogleMaps
         document.head.appendChild(script)
     }
     
-    function initMap(){
-      //Note: initMap() holds all of our local variables, in this case the canvas, lat, lng are set to their own objects.
-        mapLoaded = true
-        if(mapWaiting){
-            const { canvas, lat, lng } = mapWaiting;
-            renderMap(canvas, lat, lng)
-            mapWaiting = null
-        }
+    function initGoogleMaps(){
+      //Note: initGoogleMaps() holds all of our local variables, in this case the canvas, lat, lng are set to their own objects.
+        isLoaded = true
+        waiting.forEach((item)=>{
+          if(typeof item.fn === "function"){
+            item.fn(...item.arguments)
+          }
+        })
+        waiting = []
+    }
+    function makeAutoComplete(input){
+      if(!isLoaded){
+        waiting.push({fn: makeAutoComplete,arguments})
+        return 
+      }
+      const autoComplete = new window.google.maps.places.Autocomplete(input, {type: ['(cities)']})
+      autoComplete.addListener("place_changed", ()=>{
+        const place = autoComplete.getPlace()
+        input.dispatchEvent(new CustomEvent("changed",{detail: place}))
+      })
     }
     function showMap(canvas, lat, lng){
       /* Notes: showMap will call for google map when the api is loaded and ready.
        * Else, mapWaiting = canvas, lat, lng, storing the information until google maps is ready to receive the information.
       */
-        if(mapLoaded) renderMap(canvas, lat, lng)
-        else mapWaiting = {canvas, lat, lng}
-
-    }
-    function renderMap(canvas, lat, lng) {
-        /*Notes: This mapOption zoom is set to 18 and 20 is the farthest zoom back.
-         * center is calling the data from the json file. Saving it to mapOptions.
-         * Map is not declared but is still used via ref="map" in the template section.
-         * Map also displays the map into the DOM.
-         * setMap() function adds the red marker to the map.
-        */
+        if(!isLoaded){
+          waiting.push({
+            fn: showMap,
+            arguments
+          })
+          return
+        }
         const mapOptions = {
           zoom: 18,
           center: new window.google.maps.LatLng(
@@ -67,4 +76,4 @@ export default function(context, inject){
         const marker = new window.google.maps.Marker({ position });
         marker.setMap(map);
       }
-}
+    }
